@@ -6,7 +6,7 @@ import (
 )
 
 func initRouter(r *gin.Engine) {
-	apiRouter := r.Group("/milk-trace")
+	apiRouter := r.Group("/milkTrace")
 
 	//用户 apis
 	{

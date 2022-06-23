@@ -18,6 +18,7 @@ type Data struct {
 	ExpiredAt string `json:"expiredAt"`
 }
 
+// Login 用户登录
 func Login(c *gin.Context) {
 	// 获取用户名、密码和角色过来
 	var user UserInfo
@@ -35,10 +36,9 @@ func Login(c *gin.Context) {
 	token, expiredAt, err1 := service.Login(user.Username, user.Password, user.Role)
 	returnData := Data{token, expiredAt.String()}
 	if err1 != nil {
-		fmt.Println("handler error:", err1)
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": err1,
+			"message": "用户名或密码错误",
 		})
 		return
 	}
@@ -50,6 +50,7 @@ func Login(c *gin.Context) {
 	return
 }
 
+// Register 用户注册
 func Register(c *gin.Context) {
 	var user UserInfo
 	err := c.ShouldBind(&user)
@@ -85,6 +86,7 @@ func Register(c *gin.Context) {
 	}
 }
 
+// GetUsername 测试用，解析token返回username
 func GetUsername(c *gin.Context) {
 	result, err := service.GetUsername(c)
 	if err != nil {

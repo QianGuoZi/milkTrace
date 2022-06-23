@@ -27,20 +27,17 @@ func randSalt() string {
 func Register(userName, password, role string) (id int64, err error) {
 	user, err := dal.CheckUser(userName)
 	if err != nil {
-		fmt.Println("用户重复")
-		return 0, err
+		return 0, errors.New("该用户已存在")
 	}
-
 	//设置salt，并生成pwd
 	user.Salt = randSalt()
-	fmt.Println("salt1", user.Salt)
 	buf := bytes.Buffer{}
 	buf.WriteString(userName)
 	buf.WriteString(password)
 	buf.WriteString(user.Salt)
-	pwd, err := bcrypt.GenerateFromPassword(buf.Bytes(), bcrypt.MinCost)
-	if err != nil {
-		return 0, nil
+	pwd, err1 := bcrypt.GenerateFromPassword(buf.Bytes(), bcrypt.MinCost)
+	if err1 != nil {
+		return 0, errors.New("密码加盐失败")
 	}
 
 	user.Id = id
@@ -48,7 +45,7 @@ func Register(userName, password, role string) (id int64, err error) {
 	user.Pwd = string(pwd)
 	user.Role = role
 
-	fmt.Println("注册的user为：", user)
+	fmt.Println("注册的User为：", user)
 	returnId, err := dal.AddUser(user)
 	if err != nil {
 		return 0, err
@@ -57,13 +54,13 @@ func Register(userName, password, role string) (id int64, err error) {
 	return returnId, nil
 }
 
+//Login 使用userName password role 登陆，返回token和time
 func Login(userName, password, role string) (string, time.Time, error) {
 	result, err := dal.SearchUser(userName, password, role)
 	if err != nil {
-		return "error", time.Now(), errors.New(err.Error())
+		return "error", time.Now(), errors.New("鉴权失败")
 	} else if result == false {
-		fmt.Println("loginErr False", err)
-		return "error", time.Now(), errors.New(err.Error())
+		return "error", time.Now(), errors.New("用户名或密码错误")
 	}
 	token, times, err := GenerateToken(userName, password, role)
 	if err != nil {
@@ -84,7 +81,7 @@ func GetUsername(c *gin.Context) (string, error) {
 	if !(len(parts) == 2 && parts[0] == "Bearer") {
 		return "请求头中auth格式有误", errors.New("请求头中auth格式有误")
 	}
-	// parts[1]是获取到的tokenString，我们使用之前定义好的解析JWT的函数来解析它
+	// parts[1]是获取到的tokenString，用定义好的解析JWT的函数来解析它
 	mc, err := ParseToken(parts[1])
 	if err != nil {
 		return "无效的token", errors.New("无效的token")

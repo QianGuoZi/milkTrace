@@ -18,17 +18,9 @@ func main() {
 
 	initRouter(r)
 
-	err := r.Run(":8080") // http默认端口
+	err := r.Run(":8080") // http端口
 	if err != nil {
 		panic(err)
 	}
 
-	//log.Fatal(err.Error())
-	//dal.InitDB()
-	//register, err := service.Register("a", "123", "1")
-	//if err != nil {
-	//	fmt.Println("err", err)
-	//	return
-	//}
-	//fmt.Println("id", register)
 }
