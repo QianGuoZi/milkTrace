@@ -1,0 +1,62 @@
+package main
+
+import (
+	"fmt"
+	"github.com/FISCO-BCOS/go-sdk/client"
+	"github.com/FISCO-BCOS/go-sdk/conf"
+	"log"
+	tls "server/Tls"
+)
+
+func main() {
+
+	configs, err := conf.ParseConfigFile("config.toml")
+	if err != nil {
+		log.Fatalf("ParseConfigFile failed, err: %v", err)
+	}
+
+	clients, err := client.Dial(&configs[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	address, tx, instance, err := tls.DeployTls(clients.GetTransactOpts(), clients)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("contract address: ", address.Hex()) // the address should be saved, will use in next example
+	fmt.Println("transaction hash: ", tx.Hash().Hex())
+
+	//调用合约
+	fmt.Println("================================")
+	tlsApi := &tls.TlsSession{Contract: instance, CallOpts: *clients.GetCallOpts(), TransactOpts: *clients.GetTransactOpts()}
+
+	//weight := new(big.Int).SetUint64(uint64(100))
+	//tx, receipt, err := tlsApi.SetPasture("批次号", weight, "2022-01-02", "1")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	////fmt.Println("receipt", receipt)
+	//fmt.Printf("tx sent: %s\n", tx.Hash().Hex())
+	//fmt.Printf("transaction hash of receipt: %s\n", receipt.GetTransactionHash())
+
+	//result, err := tlsApi.GetId("idA")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//fmt.Println("idA", result)
+
+	r1, r2, r3, r4, err := tlsApi.GetByPasIdPasture("1")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("r1", r1)
+	fmt.Println("r2", r2)
+	fmt.Println("r3", r3)
+	fmt.Println("r4", r4)
+
+}
+
+//./solc-0.4.25 --bin --abi -o ./ ./Tls.sol
+//./abigen --bin ./Tls.bin --abi ./Tls.abi --pkg tls --type Tls --out ./Tls.go
