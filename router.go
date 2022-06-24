@@ -12,11 +12,12 @@ func initRouter(r *gin.Engine) {
 	{
 		apiRouter.POST("/login/", handler.Login)
 		apiRouter.POST("/register/", handler.Register)
+		apiRouter.POST("/logout/", handler.Logout)
 		apiRouter.POST("/getUsername/", handler.GetUsername)
 	}
 	//溯源信息 apis
-	//{
-	//	apiRouter.GET("")
-	//	apiRouter.POST("")
-	//}
+	{
+		apiRouter.GET("/getTrace/", handler.GetTrace)
+		apiRouter.POST("")
+	}
 }

@@ -1005,7 +1005,7 @@ contract Tls{
         Entries entries=table.select("C",condition);
         Entry entry = entries.get(0);
         return (entry.getInt("idC"),entry.getString("batch_log"),
-        entry.getString("trans_name"),entry.getString("batch_log"));
+        entry.getString("trans_name"),entry.getString("id_logistics"));
     }
 
     //通过idD获取sale信息

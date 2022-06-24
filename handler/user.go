@@ -100,3 +100,10 @@ func GetUsername(c *gin.Context) {
 		"message": result,
 	})
 }
+
+func Logout(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "成功退出登录",
+	})
+}

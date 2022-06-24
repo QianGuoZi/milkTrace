@@ -14,6 +14,8 @@ func main() {
 
 	dal.InitDB()
 
+	dal.InitTls()
+
 	r := gin.Default()
 
 	initRouter(r)
