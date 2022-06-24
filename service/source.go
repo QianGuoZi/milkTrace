@@ -21,9 +21,9 @@ type Ranch struct {
 	BatchID string `form:"batchId" json:"batchId"` // 批次号
 	Date    string `form:"date" json:"date"`       // 产奶日期
 	Weight  int64  `form:"weight" json:"weight"`   // 总净重
-	Company string `form:"company" json:"address"` //公司名称
+	Company string `form:"company" json:"company"` //公司名称
 	Phone   string `form:"phone" json:"phone"`     //联系方式
-	Address string `form:"address" json"address"`  //地址
+	Address string `form:"address" json:"address"` //地址
 }
 
 // Factory 加工厂
@@ -35,18 +35,18 @@ type Factory struct {
 	Product     string `form:"product" json:"product"`         // 产品名称
 	WorkDate    string `form:"workDate" json:"workDate"`       // 加工日期
 	WorkPerson  string `form:"workPerson" json:"workPerson"`   // 加工人姓名
-	Company     string `form:"company" json:"address"`         //公司名称
+	Company     string `form:"company" json:"company"`         //公司名称
 	Phone       string `form:"phone" json:"phone"`             //联系方式
-	Address     string `form:"address" json"address"`          //地址
+	Address     string `form:"address" json:"address"`         //地址
 }
 
 // Storage 储运商
 type Storage struct {
 	BatchID string `form:"batchId" json:"batchId"` // 批次号
 	Driver  string `form:"driver" json:"driver"`   // 运输负责人
-	Company string `form:"company" json:"address"` //公司名称
+	Company string `form:"company" json:"company"` //公司名称
 	Phone   string `form:"phone" json:"phone"`     //联系方式
-	Address string `form:"address" json"address"`  //地址
+	Address string `form:"address" json:"address"` //地址
 }
 
 // Seller 销售商
@@ -54,9 +54,9 @@ type Seller struct {
 	BatchID string `form:"batchId" json:"batchId"` // 批次号
 	Date    string `form:"date" json:"date"`       // 上架时间
 	Price   int64  `form:"price" json:"price"`     // 商品售价
-	Company string `form:"company" json:"address"` //公司名称
+	Company string `form:"company" json:"company"` //公司名称
 	Phone   string `form:"phone" json:"phone"`     //联系方式
-	Address string `form:"address" json"address"`  //地址
+	Address string `form:"address" json:"address"` //地址
 }
 
 // GetRanch 使用idA获取牧场信息
