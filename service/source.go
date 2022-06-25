@@ -64,19 +64,18 @@ func GetRanch(idA *big.Int) (Ranch, error) {
 	ranch := Ranch{}
 
 	//使用合约
-	//idA := new(big.Int).SetUint64(uint64(id))
-	_idA, batchRow, weightRaw, dateRaw, ranchIdStr, err := dal.TlsApi.GetPasture(idA)
+	_, batchRow, weightRaw, dateRaw, ranchIdStr, err := dal.TlsApi.GetPasture(idA)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("r0", _idA)
-	fmt.Println("r1", batchRow)
-	fmt.Println("r2", weightRaw)
-	fmt.Println("r3", dateRaw)
-	fmt.Println("r4", ranchIdStr)
+	//fmt.Println("r0", _idA)
+	//fmt.Println("r1", batchRow)
+	//fmt.Println("r2", weightRaw)
+	//fmt.Println("r3", dateRaw)
+	//fmt.Println("r4", ranchIdStr)
 
 	ranchId, _ := strconv.Atoi(ranchIdStr)
-	fmt.Println("ranchId", ranchId)
+	fmt.Println("牧场id", ranchId)
 	batchUser, err1 := dal.GetUserInfo(int64(ranchId))
 	fmt.Println("牧场信息", batchUser)
 	if err1 != nil {
@@ -102,23 +101,24 @@ func GetFactory(idA *big.Int) (Factory, error) {
 		return Factory{}, errors.New("获取加工厂id失败")
 	}
 
-	_idB, batchPro, productName, composition, checker, checkTime,
+	_, batchPro, productName, composition, checker, checkTime,
 		processor, processTime, factoryIdStr, err := dal.TlsApi.GetFactory(idB)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("r0", _idB)
-	fmt.Println("r1", batchPro)
-	fmt.Println("r2", productName)
-	fmt.Println("r3", composition)
-	fmt.Println("r4", checker)
-	fmt.Println("r5", checkTime)
-	fmt.Println("r6", processor)
-	fmt.Println("r7", processTime)
-	fmt.Println("r8", factoryIdStr)
-	fmt.Println("r9", factoryIdStr)
+	//fmt.Println("r0", _idB)
+	//fmt.Println("r1", batchPro)
+	//fmt.Println("r2", productName)
+	//fmt.Println("r3", composition)
+	//fmt.Println("r4", checker)
+	//fmt.Println("r5", checkTime)
+	//fmt.Println("r6", processor)
+	//fmt.Println("r7", processTime)
+	//fmt.Println("r8", factoryIdStr)
+	//fmt.Println("r9", factoryIdStr)
 
 	factoryId, _ := strconv.Atoi(factoryIdStr)
+	fmt.Println("加工厂id", factoryId)
 	factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
 	fmt.Println("加工厂信息", factoryUser)
 	if err1 != nil {
@@ -148,16 +148,17 @@ func GetStorage(idA *big.Int) (Storage, error) {
 		return Storage{}, errors.New("获取储运商id失败")
 	}
 
-	_idC, batchLog, transName, logisticsIdStr, err1 := dal.TlsApi.GetLogistics(idC)
+	_, batchLog, transName, logisticsIdStr, err1 := dal.TlsApi.GetLogistics(idC)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	fmt.Println("r0", _idC)
-	fmt.Println("r1", batchLog)
-	fmt.Println("r2", transName)
-	fmt.Println("r3", logisticsIdStr)
+	//fmt.Println("r0", _idC)
+	//fmt.Println("r1", batchLog)
+	//fmt.Println("r2", transName)
+	//fmt.Println("r3", logisticsIdStr)
 
 	logisticsId, _ := strconv.Atoi(logisticsIdStr)
+	fmt.Println("储运商id", logisticsId)
 	logisticUser, err1 := dal.GetUserInfo(int64(logisticsId))
 	fmt.Println("储运商信息", logisticUser)
 	if err1 != nil {
@@ -182,18 +183,19 @@ func GetSeller(idA *big.Int) (Seller, error) {
 		return Seller{}, errors.New("获取销售商id失败")
 	}
 
-	_idD, batchSale, priceStr, salesTime, salesIdStr, err := dal.TlsApi.GetSales(idD)
+	_, batchSale, priceStr, salesTime, salesIdStr, err := dal.TlsApi.GetSales(idD)
 	if err != nil {
 		log.Fatal(err)
 	}
 	price, _ := strconv.Atoi(priceStr)
-	fmt.Println("r0", _idD)
-	fmt.Println("r1", batchSale)
-	fmt.Println("r2", price)
-	fmt.Println("r3", salesTime)
-	fmt.Println("r4", salesIdStr)
+	//fmt.Println("r0", _idD)
+	//fmt.Println("r1", batchSale)
+	//fmt.Println("r2", price)
+	//fmt.Println("r3", salesTime)
+	//fmt.Println("r4", salesIdStr)
 
 	salesId, _ := strconv.Atoi(salesIdStr)
+	fmt.Println("销售商id", salesIdStr)
 	salesUser, err1 := dal.GetUserInfo(int64(salesId))
 	fmt.Println("销售商信息", salesUser)
 	if err1 != nil {
@@ -210,20 +212,33 @@ func GetSeller(idA *big.Int) (Seller, error) {
 	return seller, nil
 }
 
+// GetByCode 使用溯源码获取四类信息
 func GetByCode(code string) (Data, error) {
-	//ranch := Ranch{}
-	//factory := Factory{}
-	//storage := Storage{}
-	//seller := Seller{}
+	ranch := Ranch{}
+	factory := Factory{}
+	storage := Storage{}
+	seller := Seller{}
 	_id, err := dal.GetIdA(code)
 	if err != nil {
 		return Data{}, errors.New("溯源码有误")
 	}
 	idA := new(big.Int).SetUint64(uint64(_id))
-	ranch, err := GetRanch(idA)
-	factory, err := GetFactory(idA)
-	storage, err := GetStorage(idA)
-	seller, err := GetSeller(idA)
+	ranch, err = GetRanch(idA)
+	if err != nil {
+		return Data{}, errors.New("获取牧场信息有误")
+	}
+	factory, err = GetFactory(idA)
+	if err != nil {
+		return Data{}, errors.New("获取加工厂信息有误")
+	}
+	storage, err = GetStorage(idA)
+	if err != nil {
+		return Data{}, errors.New("获取储运商信息有误")
+	}
+	seller, err = GetSeller(idA)
+	if err != nil {
+		return Data{}, errors.New("获取销售商信息有误")
+	}
 
 	data := Data{}
 	data.Ranch = ranch

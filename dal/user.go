@@ -40,12 +40,16 @@ func SearchUser(userName, password, role string) (bool, error) {
 	return true, nil
 }
 
+// GetUserInfo 获取用户信息
 func GetUserInfo(id int64) (User, error) {
 	user := User{}
 	DB.Model(&User{}).Where("id = ?", id).First(&user)
-	fmt.Println("getUserInfo", user)
 	if user.Id == 0 {
 		return User{}, errors.New("无法找到该用户")
 	}
+	//屏蔽掉密码等信息
+	user.Pwd = ""
+	user.Salt = ""
+	fmt.Println("getUserInfo", user)
 	return user, nil
 }
