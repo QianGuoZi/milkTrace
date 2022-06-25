@@ -17,7 +17,9 @@ type MessageData struct {
 
 // GetInfoRanch 牧场获取数据
 func GetInfoRanch(ranchId int64) ([]Data, error) {
+	//将牧场的userId转成string
 	ranchIdStr := strconv.FormatInt(ranchId, 10)
+	//
 	idAList, batchRawList, weightRawList, dateRawList, err := dal.TlsApi.GetByPasIdPasture(ranchIdStr)
 	if err != nil {
 		return []Data{}, errors.New("合约获取牧场已发布的数据失败")
