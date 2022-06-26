@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"server/dal"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //随机生成长度为4的盐
@@ -31,18 +32,14 @@ func Register(userName, password, role string) (id int64, err error) {
 	}
 	//设置salt，并生成pwd
 	user.Salt = randSalt()
-	buf := bytes.Buffer{}
-	buf.WriteString(userName)
-	buf.WriteString(password)
-	buf.WriteString(user.Salt)
-	pwd, err1 := bcrypt.GenerateFromPassword(buf.Bytes(), bcrypt.MinCost)
-	if err1 != nil {
-		return 0, errors.New("密码加盐失败")
+	pwd, err := EncodePassword(userName, password)
+	if err != nil {
+		return 0, err
 	}
 
 	user.Id = id
 	user.UserName = userName
-	user.Pwd = string(pwd)
+	user.Pwd = pwd
 	user.Role = role
 
 	fmt.Println("注册的User为：", user)
@@ -88,4 +85,19 @@ func GetUsername(c *gin.Context) (string, error) {
 	}
 	//返回userName
 	return mc.Username, nil
+}
+
+// EncodePassword 将密码进行转换
+func EncodePassword(userName, password string) (string, error) {
+	//设置salt，并生成pwd
+	salt := randSalt()
+	buf := bytes.Buffer{}
+	buf.WriteString(userName)
+	buf.WriteString(password)
+	buf.WriteString(salt)
+	pwd, err := bcrypt.GenerateFromPassword(buf.Bytes(), bcrypt.MinCost)
+	if err != nil {
+		return "", errors.New("密码加盐失败")
+	}
+	return string(pwd), nil
 }

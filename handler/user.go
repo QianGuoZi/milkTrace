@@ -2,15 +2,24 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"server/dal"
 	"server/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserInfo struct {
 	Username string `form:"username" json:"username"`
 	Password string `form:"password" json:"password"`
 	Role     string `form:"role"json:"role"`
+}
+
+type UserData struct {
+	Company string `form:"company" json:"company"`
+	Phone   string `form:"phone" json:"phone"`
+	Address string `form:"address"json:"address"`
 }
 
 type Data struct {
@@ -54,7 +63,7 @@ func Login(c *gin.Context) {
 func Register(c *gin.Context) {
 	var user UserInfo
 	err := c.ShouldBind(&user)
-	fmt.Println("user", user)
+	log.Printf("[Register] user=%+v", user)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -105,5 +114,137 @@ func Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "成功退出登录",
+	})
+}
+
+// GetUserInfo 获取 token 返回用户信息
+func GetUserInfo(c *gin.Context) {
+	// 根据 token 获得用户名
+	username, err := service.GetUsername(c)
+	if err != nil {
+		log.Printf("[GetUserInfo] failed err=%+v", err)
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// 根据用户名获取用户信息
+	user, err := dal.GetUserInfoByName(username)
+	if err != nil {
+		log.Printf("[GetUserInfo] failed err=%+v", err)
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    user,
+		"message": "获取信息成功",
+	})
+}
+
+// UpdateUserInfo 更新用户信息
+func UpdateUserInfo(c *gin.Context) {
+	// 根据 token 获得用户名
+	username, err := service.GetUsername(c)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// 获取用户其他信息
+	var data UserData
+	err = c.ShouldBind(&data)
+	log.Printf("[UpdateUserInfo] username=%s data=%+v", username, data)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户数据格式有误",
+		})
+		return
+	}
+
+	// 更新用户信息
+	user := &dal.User{
+		UserName: username,
+		Company:  data.Company,
+		Address:  data.Address,
+		Phone:    data.Phone,
+	}
+	err = dal.UpdateUser(user)
+
+	if err != nil {
+		log.Printf("mysql update user failed err=%+v", err)
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "更新用户信息失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    user,
+		"message": "用户信息修改成功",
+	})
+}
+
+// UpdateUserPwd 更新用户密码
+func UpdateUserPwd(c *gin.Context) {
+	// 根据 token 获得用户名
+	username, err := service.GetUsername(c)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// 获取用户新密码
+	pwd := c.PostForm("password")
+	log.Printf("[UpdateUserPwd] username=%s", username)
+	if pwd == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "用户密码不得为空",
+		})
+		return
+	}
+
+	// 更新用户信息
+	pwd, err = service.EncodePassword(username, pwd)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	user := &dal.User{
+		UserName: username,
+		Pwd:      pwd,
+	}
+	err = dal.UpdateUser(user)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "更新用户密码失败",
+		})
+		return
+	}
+	// 隐藏用户密码
+	user.Pwd = ""
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    user,
+		"message": "修改密码成功",
 	})
 }

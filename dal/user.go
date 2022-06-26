@@ -3,6 +3,8 @@ package dal
 import (
 	"errors"
 	"fmt"
+	"log"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,4 +54,44 @@ func GetUserInfo(id int64) (User, error) {
 	user.Salt = ""
 	fmt.Println("getUserInfo", user)
 	return user, nil
+}
+
+// GetUserInfoByName 获取用户信息
+func GetUserInfoByName(name string) (User, error) {
+	user := User{}
+	DB.Model(&User{}).Where("user_name = ?", name).First(&user)
+	if user.Id == 0 {
+		return User{}, errors.New("无法找到该用户")
+	}
+	//屏蔽掉密码等信息
+	user.Pwd = ""
+	user.Salt = ""
+	log.Printf("GetUserInfoByName usr=%+v", user)
+	return user, nil
+}
+
+// UpdateUser 更改用户信息
+func UpdateUser(user *User) error {
+	info := make(map[string]interface{})
+	if user.Company != "" {
+		info["company"] = user.Company
+	}
+	if user.Phone != "" {
+		info["phone"] = user.Phone
+	}
+	if user.Address != "" {
+		info["address"] = user.Address
+	}
+	if user.Pwd != "" {
+		info["pwd"] = user.Pwd
+	}
+	log.Printf("[mysql UpdateUser] user=%+v data=%+v", user, info)
+	result := DB.Model(&User{}).Where("user_name = ?", user.UserName).Updates(info)
+
+	if result.Error != nil {
+		log.Printf("mysql update user failed err=%+v", result.Error)
+		return result.Error
+	}
+
+	return nil
 }
