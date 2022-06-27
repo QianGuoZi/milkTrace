@@ -22,6 +22,7 @@ func initRouter(r *gin.Engine) {
 	//溯源信息 apis
 	{
 		apiRouter.GET("/getTrace/", handler.GetTrace)
-		apiRouter.POST("")
+		apiRouter.GET("/getMessage/", handler.GetMessage)
+		apiRouter.POST("/setMessage/", handler.SetMessage)
 	}
 }
