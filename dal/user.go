@@ -33,10 +33,12 @@ func SearchUser(userName, password, role string) (bool, error) {
 	DB.Model(&User{}).Where("user_name = ? && role = ?", userName, role).First(&user)
 	fmt.Println("查询的user", user)
 	if user.UserName != userName {
+		fmt.Print("用户名错误")
 		return false, errors.New("用户名错误")
 	}
 	err2 := bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(userName+password+user.Salt))
 	if err2 != nil {
+		fmt.Print("密码错误")
 		return false, errors.New("密码错误")
 	}
 	return true, nil

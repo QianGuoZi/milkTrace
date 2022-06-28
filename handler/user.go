@@ -218,8 +218,18 @@ func UpdateUserPwd(c *gin.Context) {
 		return
 	}
 
+	userInfo, err1 := dal.GetUserInfoByName(username)
+	if err1 != nil {
+		log.Printf("[GetUserInfo] failed err=%+v", err)
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
 	// 更新用户信息
-	pwd, err = service.EncodePassword(username, pwd)
+	pwd, err = service.EncodePassword(username, pwd, userInfo.Salt)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,

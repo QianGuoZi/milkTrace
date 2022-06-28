@@ -312,14 +312,14 @@ contract Tls{
     }
 
     // getByIdA_pasture：根据idA数组获取对应牧场的信息
-    function getByIdA_pasture(int[] _idA) public view returns(int[] memory,string[] memory,int[] memory,string[] memory){
+    function getByIdA_pasture(int[] _idA) public view returns(string[] memory,int[] memory,string[] memory,string[] memory){
         Table table=tableFactory.openTable("t_pasture");
 
         // 定义答案数组
-        int[] memory idA_list=new int[](uint(_idA.length));
         string[] memory batch_raw_list=new string[](uint(_idA.length));
         int256[] memory weight_raw_list=new int256[](uint(_idA.length));
         string[] memory date_raw_list=new string[](uint(_idA.length));
+        string[] memory id_pasture_list=new string[](uint(_idA.length));
 
         for(uint i=0;i<_idA.length;++i){
             // 获取第i个idA
@@ -333,12 +333,12 @@ contract Tls{
             Entry entry=entries.get(0);
 
             // 将该记录的各字段值存入答案数组中
-            idA_list[uint(i)]=entry.getInt("idA");
             batch_raw_list[uint(i)]=entry.getString("batch_raw");
             weight_raw_list[uint(i)]=entry.getInt("weight_raw");
             date_raw_list[uint(i)]=entry.getString("date_raw");
+            id_pasture_list[uint(i)]=entry.getString("id_pasture");
         }
-        return (idA_list,batch_raw_list,weight_raw_list,date_raw_list);
+        return (batch_raw_list,weight_raw_list,date_raw_list,id_pasture_list);
     }
 
     // getEmpty_pasture：获取所有暂时未补充加工厂信息的原料奶批次idA数组

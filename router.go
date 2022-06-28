@@ -16,8 +16,8 @@ func initRouter(r *gin.Engine) {
 		apiRouter.POST("/logout/", handler.Logout)
 		apiRouter.POST("/getUsername/", handler.GetUsername)
 		apiRouter.GET("/getUserInfo/", handler.GetUserInfo)
-		apiRouter.POST("/updateUserInfo/", handler.UpdateUserInfo)
-		apiRouter.POST("/updateUserPwd/", handler.UpdateUserPwd)
+		apiRouter.POST("/setUserInfo/", handler.UpdateUserInfo)
+		apiRouter.POST("/setUserPwd/", handler.UpdateUserPwd)
 	}
 	//溯源信息 apis
 	{

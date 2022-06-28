@@ -32,7 +32,7 @@ func Register(userName, password, role string) (id int64, err error) {
 	}
 	//设置salt，并生成pwd
 	user.Salt = randSalt()
-	pwd, err := EncodePassword(userName, password)
+	pwd, err := EncodePassword(userName, password, user.Salt)
 	if err != nil {
 		return 0, err
 	}
@@ -88,9 +88,8 @@ func GetUsername(c *gin.Context) (string, error) {
 }
 
 // EncodePassword 将密码进行转换
-func EncodePassword(userName, password string) (string, error) {
+func EncodePassword(userName, password, salt string) (string, error) {
 	//设置salt，并生成pwd
-	salt := randSalt()
 	buf := bytes.Buffer{}
 	buf.WriteString(userName)
 	buf.WriteString(password)
