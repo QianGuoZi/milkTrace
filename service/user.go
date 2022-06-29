@@ -2,6 +2,8 @@ package service
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -32,6 +34,10 @@ func Register(userName, password, role string) (id int64, err error) {
 	}
 	//设置salt，并生成pwd
 	user.Salt = randSalt()
+	pw := md5.New()
+	pw.Write([]byte(password))
+	password = hex.EncodeToString(pw.Sum(nil))
+	fmt.Println("md5:", password)
 	pwd, err := EncodePassword(userName, password, user.Salt)
 	if err != nil {
 		return 0, err

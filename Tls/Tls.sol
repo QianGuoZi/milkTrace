@@ -576,10 +576,10 @@ contract Tls{
     }
 
     // getByIdB_factory1：根据idB数组获取对应加工厂的信息(前三个字段)
-    function getByIdB_factory1(int[] _idB)public view returns(int[] memory,string[] memory,string[] memory){
+    function getByIdB_factory1(int[] _idB)public view returns(string[] memory,string[] memory,string[] memory){
         Table table=tableFactory.openTable("t_factory");
 
-        int[] memory idB_list=new int[](uint(_idB.length));
+        string[] memory id_factory_list=new string[](uint(_idB.length));
         string[] memory batch_pro_list=new string[](uint(_idB.length));
         string[] memory product_name_list=new string[](uint(_idB.length));
 
@@ -595,12 +595,12 @@ contract Tls{
             Entry entry=entries.get(0);
 
             // 将该记录的各字段值存入答案数组中
-            idB_list[uint(i)]=entry.getInt("idB");
+            id_factory_list[uint(i)]=entry.getString("id_factory");
             batch_pro_list[uint(i)]=entry.getString("batch_pro");
             product_name_list[uint(i)]=entry.getString("product_name");
         }
 
-        return (idB_list,batch_pro_list,product_name_list);
+        return (id_factory_list,batch_pro_list,product_name_list);
     }
 
     //  getByIdB_factory2：根据idB数组获取对应加工厂的信息（中间两个字段）
@@ -720,7 +720,7 @@ contract Tls{
 
     //销售商
     // getBySaleid_sales：获取某销售商历史信息中的销售批次信息
-    function getBySaleid_sales(string id_sales)public view returns(int[] memory,string[] memory,string[] memory,string[] memory){
+    function getBySaleid_sales(string id_sales)public view returns(int[] memory,int[] memory,string[] memory,string[] memory){
         Table table=tableFactory.openTable("t_sales");
 
         Condition condition=table.newCondition();
@@ -729,7 +729,7 @@ contract Tls{
         Entries entries=table.select("D",condition);
 
         int[] memory idD_list=new int[](uint(entries.size()));
-        string[] memory price_list=new string[](uint(entries.size()));
+        int[] memory price_list=new int[](uint(entries.size()));
         string[] memory sales_time_list=new string[](uint(entries.size()));
         string[] memory batch_sale_list=new string[](uint(entries.size()));
 
@@ -737,7 +737,7 @@ contract Tls{
             Entry entry=entries.get(i);
 
             idD_list[uint(i)]=entry.getInt("idD");
-            price_list[uint(i)]=entry.getString("price");
+            price_list[uint(i)]=entry.getInt("price");
             sales_time_list[uint(i)]=entry.getString("sales_time");
             batch_sale_list[uint(i)]=entry.getString("batch_sale");
 

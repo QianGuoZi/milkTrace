@@ -26,6 +26,11 @@ type FactoryInput struct {
 	WorkPerson  string `form:"workPerson" json:"workPerson"`   // 加工人姓名
 }
 
+type StorageInput struct {
+	BatchID string `form:"batchId" json:"batchId"` // 批次号
+	Driver  string `form:"driver" json:"driver"`   // 运输负责人
+}
+
 func GetMessage(c *gin.Context) {
 	// 根据 token 获得用户名
 	username, err := service.GetUsername(c)
@@ -69,6 +74,38 @@ func GetMessage(c *gin.Context) {
 		resultList, err := service.GetInfoFactory(user.Id)
 		if err != nil {
 			log.Printf("[GetInfoRanch] failed err=%+v", err)
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "成功获取产品信息",
+			"data":    resultList,
+		})
+	} else if user.Role == "2" {
+		//储运商获取信息
+		resultList, err := service.GetInfoStorage(user.Id)
+		if err != nil {
+			log.Printf("[GetInfoStorage] failed err=%+v", err)
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "成功获取产品信息",
+			"data":    resultList,
+		})
+	} else if user.Role == "3" {
+		//储运商获取信息
+		resultList, err := service.GetInfoSeller(user.Id)
+		if err != nil {
+			log.Printf("[GetInfoSeller] failed err=%+v", err)
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": err.Error(),
@@ -143,6 +180,26 @@ func SetMessage(c *gin.Context) {
 			factoryInput.Product, factoryInput.WorkDate, factoryInput.WorkPerson)
 		if err != nil {
 			log.Printf("[AddInfoFactory] failed err=%+v", err)
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "成功添加产品信息",
+		})
+	} else if user.Role == "2" {
+		var storageInput = StorageInput{}
+		message := c.Query("message")
+		fmt.Println("message", message)
+		json.Unmarshal([]byte(message), &storageInput)
+		fmt.Println("storageInput", storageInput)
+
+		err = service.AddInfoStorage(code, user.Id, storageInput.BatchID, storageInput.Driver)
+		if err != nil {
+			log.Printf("[AddInfoStorage] failed err=%+v", err)
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,
 				"message": err.Error(),

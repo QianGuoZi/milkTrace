@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"server/dal"
 	"server/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,13 +14,17 @@ import (
 type UserInfo struct {
 	Username string `form:"username" json:"username"`
 	Password string `form:"password" json:"password"`
-	Role     string `form:"role"json:"role"`
+	Role     int    `form:"role" json:"role"`
 }
 
 type UserData struct {
 	Company string `form:"company" json:"company"`
 	Phone   string `form:"phone" json:"phone"`
-	Address string `form:"address"json:"address"`
+	Address string `form:"address" json:"address"`
+}
+
+type UserPwd struct {
+	Password string `form:"password" json:"password"`
 }
 
 type Data struct {
@@ -42,8 +47,9 @@ func Login(c *gin.Context) {
 	}
 	// 校验用户名和密码是否正确
 	// 生成Token
-	token, expiredAt, err1 := service.Login(user.Username, user.Password, user.Role)
-	returnData := Data{token, expiredAt.String()}
+	token, expiredAt, err1 := service.Login(user.Username, user.Password, strconv.Itoa(user.Role))
+	str := expiredAt.String()
+	returnData := Data{token, str[0:10]}
 	if err1 != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -72,14 +78,14 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	_, err1 := service.Register(user.Username, user.Password, user.Role)
+	_, err1 := service.Register(user.Username, user.Password, strconv.Itoa(user.Role))
 	if err1 != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "注册失败",
 		})
 	} else {
-		token, times, err := service.GenerateToken(user.Username, user.Password, user.Role)
+		token, times, err := service.GenerateToken(user.Username, user.Password, strconv.Itoa(user.Role))
 		returnData := Data{token, times.String()}
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{
@@ -208,7 +214,10 @@ func UpdateUserPwd(c *gin.Context) {
 	}
 
 	// 获取用户新密码
-	pwd := c.PostForm("password")
+	var userPwd UserPwd
+	err = c.ShouldBind(&userPwd)
+	pwd := userPwd.Password
+	log.Printf("[UpdateUserPwd] password=%s", userPwd.Password)
 	log.Printf("[UpdateUserPwd] username=%s", username)
 	if pwd == "" {
 		c.JSON(http.StatusOK, gin.H{
@@ -254,7 +263,7 @@ func UpdateUserPwd(c *gin.Context) {
 	user.Pwd = ""
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data":    user,
+		//"data":    user,
 		"message": "修改密码成功",
 	})
 }

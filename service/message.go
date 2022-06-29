@@ -243,3 +243,444 @@ func AddInfoFactory(code string, factoryId int64, batchId string, checkDate stri
 	}
 	return nil
 }
+
+// GetInfoStorage 储运商获取信息
+func GetInfoStorage(storageId int64) ([]MessageData, error) {
+	//牧场+加工厂+__
+	//牧场idList和加工厂idList
+	idAListEmpty, idBListEmpty, err := dal.TlsApi.GetEmptyFactory()
+	if err != nil {
+		return []MessageData{}, errors.New("获取未添加储运商信息的idA和idB失败")
+	}
+	//获取牧场信息列表
+	batchRawListEmpty, weightRawListEmpty, dateRawListEmpty, ranchIdListEmpty, err1 := dal.TlsApi.GetByIdAPasture(idAListEmpty)
+	if err1 != nil {
+		return []MessageData{}, errors.New("获取牧场信息列表失败")
+	}
+	//获取加工厂信息列表
+	factoryIdListEmpty, batchProListEmpty, productNameListEmpty, err := dal.TlsApi.GetByIdBFactory1(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息1失败")
+	}
+	checkerListEmpty, checkTimeListEmpty, err := dal.TlsApi.GetByIdBFactory2(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息2失败")
+	}
+	processorListEmpty, processTimeListEmpty, compositionListEmpty, err := dal.TlsApi.GetByIdBFactory3(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息3失败")
+	}
+
+	//牧场+加工厂+储运商
+	//储运商id字符串
+	storageIdStr := strconv.FormatInt(storageId, 10)
+	_, _, driverList, batchStoList, err := dal.TlsApi.GetByLogidLogistics(storageIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息失败")
+	}
+	fmt.Println("储运商id", storageId)
+	storageUser, err1 := dal.GetUserInfo(int64(storageId))
+	fmt.Println("储运商信息", storageUser)
+	if err1 != nil {
+		return []MessageData{}, errors.New("获取储运商信息失败")
+	}
+
+	//牧场idList
+	idAList, err := dal.TlsApi.GetByLogIdTrace1(storageIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息中idAList失败")
+	}
+	//获取牧场信息列表
+	batchRawList, weightRawList, dateRawList, ranchIdList, err := dal.TlsApi.GetByIdAPasture(idAList)
+
+	//加工厂idList
+	idBList, err := dal.TlsApi.GetByLogIdTrace2(storageIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息中idBList失败")
+	}
+	//获取加工厂信息列表
+	factoryIdList, batchProList, productNameList, err := dal.TlsApi.GetByIdBFactory1(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息中Factory1失败")
+	}
+	checkerList, checkTimeList, err := dal.TlsApi.GetByIdBFactory2(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息中Factory2失败")
+	}
+	processorList, processTimeList, compositionList, err := dal.TlsApi.GetByIdBFactory3(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商已添加的信息中Factory3失败")
+	}
+
+	arrayLength := len(idAList) + len(idAListEmpty)
+	fmt.Println("arrayLength", arrayLength)
+	dataArray := make([]MessageData, arrayLength)
+
+	//牧场+加工厂+__
+	for i := 0; i < len(idAListEmpty); i++ {
+		//获取溯源码
+		code, err := dal.GetCode(idAListEmpty[i].Int64())
+		if err != nil {
+			return []MessageData{}, errors.New("获取溯源码失败")
+		}
+		dataArray[i].Code = code
+
+		//获取牧场信息
+		ranchId, _ := strconv.Atoi(ranchIdListEmpty[i])
+		fmt.Println("牧场id", ranchId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("牧场信息", ranchUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取牧场信息失败")
+		}
+		ranch := Ranch{}
+		ranch.BatchID = batchRawListEmpty[i]
+		ranch.Date = dateRawListEmpty[i]
+		ranch.Weight = weightRawListEmpty[i].Int64()
+		ranch.Company = ranchUser.Company
+		ranch.Phone = ranchUser.Phone
+		ranch.Address = ranchUser.Address
+		dataArray[i].Ranch = &ranch
+
+		//获取加工厂信息
+		factoryId, _ := strconv.Atoi(factoryIdListEmpty[i])
+		fmt.Println("加工厂id", factoryId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("加工厂信息", factoryUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取加工厂信息失败")
+		}
+		factory := Factory{}
+		factory.BatchID = batchProListEmpty[i]
+		factory.CheckDate = checkTimeListEmpty[i]
+		factory.CheckPerson = checkerListEmpty[i]
+		factory.Material = compositionListEmpty[i]
+		factory.Product = productNameListEmpty[i]
+		factory.WorkDate = processTimeListEmpty[i]
+		factory.WorkPerson = processorListEmpty[i]
+		factory.Company = factoryUser.Company
+		factory.Phone = factoryUser.Phone
+		factory.Address = factoryUser.Address
+		dataArray[i].Factory = &factory
+
+		dataArray[i].Storage = nil
+		dataArray[i].Seller = nil
+	}
+
+	//牧场+加工厂+储运商
+	for i := len(idAListEmpty); i < arrayLength; i++ {
+		var ii = i - len(idAListEmpty)
+		//获取溯源码
+		code, err := dal.GetCode(idAList[ii].Int64())
+		if err != nil {
+			return []MessageData{}, errors.New("获取溯源码失败")
+		}
+		dataArray[i].Code = code
+
+		//获取牧场信息
+		ranchId, _ := strconv.Atoi(ranchIdList[ii])
+		fmt.Println("牧场id", ranchId)
+		////！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("牧场信息", ranchUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取牧场信息失败")
+		}
+		ranch := Ranch{}
+		ranch.BatchID = batchRawList[ii]
+		ranch.Date = dateRawList[ii]
+		ranch.Weight = weightRawList[ii].Int64()
+		ranch.Company = ranchUser.Company
+		ranch.Phone = ranchUser.Phone
+		ranch.Address = ranchUser.Address
+		dataArray[i].Ranch = &ranch
+
+		//获取加工厂信息
+		factoryId, _ := strconv.Atoi(factoryIdList[ii])
+		fmt.Println("加工厂id", factoryId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("加工厂信息", factoryUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取加工厂信息失败")
+		}
+		factory := Factory{}
+		factory.BatchID = batchProList[ii]
+		factory.CheckDate = checkTimeList[ii]
+		factory.CheckPerson = checkerList[ii]
+		factory.Material = compositionList[ii]
+		factory.Product = productNameList[ii]
+		factory.WorkDate = processTimeList[ii]
+		factory.WorkPerson = processorList[ii]
+		factory.Company = factoryUser.Company
+		factory.Phone = factoryUser.Phone
+		factory.Address = factoryUser.Address
+		dataArray[i].Factory = &factory
+
+		//储运商信息
+		storage := Storage{}
+		storage.BatchID = batchStoList[ii]
+		storage.Driver = driverList[ii]
+		storage.Company = storageUser.Company
+		storage.Phone = storageUser.Phone
+		storage.Address = storageUser.Address
+		dataArray[i].Storage = &storage
+
+		dataArray[i].Seller = nil
+	}
+	fmt.Println("储运商返回的信息", dataArray)
+	return dataArray, nil
+}
+
+// AddInfoStorage 储运商添加信息
+func AddInfoStorage(code string, storageId int64, batchId string, driver string) error {
+	//获取idA
+	_idA, err := dal.GetIdA(code)
+	if err != nil {
+		return errors.New("溯源码获取idA失败")
+	}
+	idA := new(big.Int).SetUint64(uint64(int(_idA)))
+	_, _, err = dal.TlsApi.SetLogistics(idA, batchId, driver, strconv.Itoa(int(storageId)))
+	if err != nil {
+		return errors.New("储运商发布数据失败")
+	}
+	return nil
+}
+
+// GetInfoSeller 销售商获取信息
+func GetInfoSeller(sellerId int64) ([]MessageData, error) {
+	//牧场+加工厂+储运商+__
+	//牧场idList和加工厂idList和储运商idList
+	idAListEmpty, idBListEmpty, idCListEmpty, err := dal.TlsApi.GetEmptyLogistics()
+	if err != nil {
+		return []MessageData{}, errors.New("获取未添加储运商信息的idA和idB失败")
+	}
+	//获取牧场信息列表
+	batchRawListEmpty, weightRawListEmpty, dateRawListEmpty, ranchIdListEmpty, err1 := dal.TlsApi.GetByIdAPasture(idAListEmpty)
+	if err1 != nil {
+		return []MessageData{}, errors.New("获取牧场信息列表失败")
+	}
+	//获取加工厂信息列表
+	factoryIdListEmpty, batchProListEmpty, productNameListEmpty, err := dal.TlsApi.GetByIdBFactory1(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息1失败")
+	}
+	checkerListEmpty, checkTimeListEmpty, err := dal.TlsApi.GetByIdBFactory2(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息2失败")
+	}
+	processorListEmpty, processTimeListEmpty, compositionListEmpty, err := dal.TlsApi.GetByIdBFactory3(idBListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取加工厂信息3失败")
+	}
+	//获取储运商信息列表
+	_, batchStoListEmpty, driverListEmpty, storageIdListEmpty, err := dal.TlsApi.GetByIdCLogistics(idCListEmpty)
+	if err != nil {
+		return []MessageData{}, errors.New("获取储运商失败")
+	}
+
+	//牧场+加工厂+储运商+销售商
+	sellerIdStr := strconv.FormatInt(sellerId, 10)
+	_, priceList, salesTimeList, batchSaleList, err := dal.TlsApi.GetBySaleidSales(sellerIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息失败")
+	}
+	fmt.Println("销售商id", sellerId)
+	sellerUser, err1 := dal.GetUserInfo(int64(sellerId))
+	fmt.Println("销售商信息", sellerUser)
+	if err1 != nil {
+		return []MessageData{}, errors.New("获取销售商信息失败")
+	}
+
+	//牧场idList
+	idAList, err := dal.TlsApi.GetBySaleIdTrace1(sellerIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中idAList失败")
+	}
+	//获取牧场信息列表
+	batchRawList, weightRawList, dateRawList, ranchIdList, err := dal.TlsApi.GetByIdAPasture(idAList)
+
+	//加工厂idList
+	idBList, err := dal.TlsApi.GetBySaleIdTrace2(sellerIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中idBList失败")
+	}
+	//获取加工厂信息列表
+	factoryIdList, batchProList, productNameList, err := dal.TlsApi.GetByIdBFactory1(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中Factory1失败")
+	}
+	checkerList, checkTimeList, err := dal.TlsApi.GetByIdBFactory2(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中Factory2失败")
+	}
+	processorList, processTimeList, compositionList, err := dal.TlsApi.GetByIdBFactory3(idBList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中Factory3失败")
+	}
+
+	idCList, err := dal.TlsApi.GetBySaleIdTrace3(sellerIdStr)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中idCList失败")
+	}
+	_, batchStoList, driverList, storageIdList, err := dal.TlsApi.GetByIdCLogistics(idCList)
+	if err != nil {
+		return []MessageData{}, errors.New("获取销售商已添加的信息中Storage失败")
+	}
+
+	arrayLength := len(idAList) + len(idAListEmpty)
+	fmt.Println("arrayLength", arrayLength)
+	dataArray := make([]MessageData, arrayLength)
+
+	//牧场+加工厂+储运商+__
+	for i := 0; i < len(idAListEmpty); i++ {
+		//获取溯源码
+		code, err := dal.GetCode(idAListEmpty[i].Int64())
+		if err != nil {
+			return []MessageData{}, errors.New("获取溯源码失败")
+		}
+		dataArray[i].Code = code
+
+		//获取牧场信息
+		ranchId, _ := strconv.Atoi(ranchIdListEmpty[i])
+		fmt.Println("牧场id", ranchId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("牧场信息", ranchUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取牧场信息失败")
+		}
+		ranch := Ranch{}
+		ranch.BatchID = batchRawListEmpty[i]
+		ranch.Date = dateRawListEmpty[i]
+		ranch.Weight = weightRawListEmpty[i].Int64()
+		ranch.Company = ranchUser.Company
+		ranch.Phone = ranchUser.Phone
+		ranch.Address = ranchUser.Address
+		dataArray[i].Ranch = &ranch
+
+		//获取加工厂信息
+		factoryId, _ := strconv.Atoi(factoryIdListEmpty[i])
+		fmt.Println("加工厂id", factoryId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("加工厂信息", factoryUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取加工厂信息失败")
+		}
+		factory := Factory{}
+		factory.BatchID = batchProListEmpty[i]
+		factory.CheckDate = checkTimeListEmpty[i]
+		factory.CheckPerson = checkerListEmpty[i]
+		factory.Material = compositionListEmpty[i]
+		factory.Product = productNameListEmpty[i]
+		factory.WorkDate = processTimeListEmpty[i]
+		factory.WorkPerson = processorListEmpty[i]
+		factory.Company = factoryUser.Company
+		factory.Phone = factoryUser.Phone
+		factory.Address = factoryUser.Address
+		dataArray[i].Factory = &factory
+
+		//获取储运商信息
+		storageId, _ := strconv.Atoi(storageIdListEmpty[i])
+		fmt.Println("储运商id", storageId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		storageUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("储运商信息", storageUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取储运商信息失败")
+		}
+		storage := Storage{}
+		storage.BatchID = batchStoListEmpty[i]
+		storage.Driver = driverListEmpty[i]
+		storage.Company = storageUser.Company
+		storage.Phone = storageUser.Phone
+		storage.Address = storageUser.Address
+		dataArray[i].Storage = &storage
+
+		dataArray[i].Seller = nil
+	}
+
+	//牧场+加工厂+储运商
+	for i := len(idAListEmpty); i < arrayLength; i++ {
+		var ii = i - len(idAListEmpty)
+		//获取溯源码
+		code, err := dal.GetCode(idAList[ii].Int64())
+		if err != nil {
+			return []MessageData{}, errors.New("获取溯源码失败")
+		}
+		dataArray[i].Code = code
+
+		//获取牧场信息
+		ranchId, _ := strconv.Atoi(ranchIdList[ii])
+		fmt.Println("牧场id", ranchId)
+		////！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("牧场信息", ranchUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取牧场信息失败")
+		}
+		ranch := Ranch{}
+		ranch.BatchID = batchRawList[ii]
+		ranch.Date = dateRawList[ii]
+		ranch.Weight = weightRawList[ii].Int64()
+		ranch.Company = ranchUser.Company
+		ranch.Phone = ranchUser.Phone
+		ranch.Address = ranchUser.Address
+		dataArray[i].Ranch = &ranch
+
+		//获取加工厂信息
+		factoryId, _ := strconv.Atoi(factoryIdList[ii])
+		fmt.Println("加工厂id", factoryId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("加工厂信息", factoryUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取加工厂信息失败")
+		}
+		factory := Factory{}
+		factory.BatchID = batchProList[ii]
+		factory.CheckDate = checkTimeList[ii]
+		factory.CheckPerson = checkerList[ii]
+		factory.Material = compositionList[ii]
+		factory.Product = productNameList[ii]
+		factory.WorkDate = processTimeList[ii]
+		factory.WorkPerson = processorList[ii]
+		factory.Company = factoryUser.Company
+		factory.Phone = factoryUser.Phone
+		factory.Address = factoryUser.Address
+		dataArray[i].Factory = &factory
+
+		//储运商信息
+		storageId, _ := strconv.Atoi(storageIdList[ii])
+		fmt.Println("储运商id", storageId)
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
+		storageUser, err1 := dal.GetUserInfo(int64(1))
+		fmt.Println("储运商信息", storageUser)
+		if err1 != nil {
+			return []MessageData{}, errors.New("获取储运商信息失败")
+		}
+		storage := Storage{}
+		storage.BatchID = batchStoList[ii]
+		storage.Driver = driverList[ii]
+		storage.Company = storageUser.Company
+		storage.Phone = storageUser.Phone
+		storage.Address = storageUser.Address
+		dataArray[i].Storage = &storage
+
+		//销售商信息
+		seller := Seller{}
+		seller.BatchID = batchSaleList[ii]
+		seller.Price = priceList[ii].Int64()
+		seller.Date = salesTimeList[ii]
+		seller.Company = sellerUser.Company
+		seller.Phone = sellerUser.Phone
+		seller.Address = sellerUser.Address
+
+		dataArray[i].Seller = &seller
+	}
+	fmt.Println("销售商返回的信息", dataArray)
+	return dataArray, nil
+}
