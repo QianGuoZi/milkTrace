@@ -68,11 +68,6 @@ func GetRanch(idA *big.Int) (Ranch, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//fmt.Println("r0", _idA)
-	//fmt.Println("r1", batchRow)
-	//fmt.Println("r2", weightRaw)
-	//fmt.Println("r3", dateRaw)
-	//fmt.Println("r4", ranchIdStr)
 
 	ranchId, _ := strconv.Atoi(ranchIdStr)
 	fmt.Println("牧场id", ranchId)
@@ -106,16 +101,6 @@ func GetFactory(idA *big.Int) (Factory, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//fmt.Println("r0", _idB)
-	//fmt.Println("r1", batchPro)
-	//fmt.Println("r2", productName)
-	//fmt.Println("r3", composition)
-	//fmt.Println("r4", checker)
-	//fmt.Println("r5", checkTime)
-	//fmt.Println("r6", processor)
-	//fmt.Println("r7", processTime)
-	//fmt.Println("r8", factoryIdStr)
-	//fmt.Println("r9", factoryIdStr)
 
 	factoryId, _ := strconv.Atoi(factoryIdStr)
 	fmt.Println("加工厂id", factoryId)
@@ -152,10 +137,6 @@ func GetStorage(idA *big.Int) (Storage, error) {
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	//fmt.Println("r0", _idC)
-	//fmt.Println("r1", batchLog)
-	//fmt.Println("r2", transName)
-	//fmt.Println("r3", logisticsIdStr)
 
 	logisticsId, _ := strconv.Atoi(logisticsIdStr)
 	fmt.Println("储运商id", logisticsId)
@@ -188,11 +169,6 @@ func GetSeller(idA *big.Int) (Seller, error) {
 		log.Fatal(err)
 	}
 	price, _ := strconv.Atoi(priceStr)
-	//fmt.Println("r0", _idD)
-	//fmt.Println("r1", batchSale)
-	//fmt.Println("r2", price)
-	//fmt.Println("r3", salesTime)
-	//fmt.Println("r4", salesIdStr)
 
 	salesId, _ := strconv.Atoi(salesIdStr)
 	fmt.Println("销售商id", salesIdStr)

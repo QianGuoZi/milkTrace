@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,11 @@ import (
 	"server/dal"
 	"server/service"
 )
+
+type Input struct {
+	Code    string       `form:"code" json:"code"`
+	Message FactoryInput `form:"message" json:"message"`
+}
 
 type RanchInput struct {
 	BatchID string `form:"batchId" json:"batchId"` // 批次号
@@ -29,6 +35,12 @@ type FactoryInput struct {
 type StorageInput struct {
 	BatchID string `form:"batchId" json:"batchId"` // 批次号
 	Driver  string `form:"driver" json:"driver"`   // 运输负责人
+}
+
+type SellerInput struct {
+	BatchID string `form:"batchId" json:"batchId"` // 批次号
+	Date    string `form:"date" json:"date"`       // 上架时间
+	Price   int64  `form:"price" json:"price"`     // 商品售价
 }
 
 func GetMessage(c *gin.Context) {
@@ -142,19 +154,24 @@ func SetMessage(c *gin.Context) {
 		})
 		return
 	}
-
-	code := c.Query("code")
+	obj := struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}{}
+	err = c.BindJSON(&obj)
+	if err != nil {
+		fmt.Println("json数据获取失败", err)
+	} else {
+		fmt.Println("获取的数据为", obj)
+	}
+	code := obj.Code
 
 	if user.Role == "0" {
 		var ranchInput = RanchInput{}
-		message := c.Query("message")
-		fmt.Println("message", message)
-		json.Unmarshal([]byte(message), &ranchInput)
+		fmt.Println("message", obj.Message)
+		json.Unmarshal([]byte(obj.Message), &ranchInput)
 		fmt.Println("ranchInput", ranchInput)
-		//var ranchInputM = RanchInputM{}
-		//c.ShouldBind(&ranchInputM)
-		//var ranchInput = ranchInputM.Message
-		//fmt.Println("ranchInput", ranchInput)
+
 		err = service.AddInfoRanch(user.Id, ranchInput.BatchID, ranchInput.Date, ranchInput.Weight)
 		if err != nil {
 			log.Printf("[AddInfoRanch] failed err=%+v", err)
@@ -170,9 +187,8 @@ func SetMessage(c *gin.Context) {
 		})
 	} else if user.Role == "1" {
 		var factoryInput = FactoryInput{}
-		message := c.Query("message")
-		fmt.Println("message", message)
-		json.Unmarshal([]byte(message), &factoryInput)
+		fmt.Println("message", obj.Message)
+		json.Unmarshal([]byte(obj.Message), &factoryInput)
 		fmt.Println("factoryInput", factoryInput)
 
 		err = service.AddInfoFactory(code, user.Id, factoryInput.BatchID,
@@ -192,9 +208,8 @@ func SetMessage(c *gin.Context) {
 		})
 	} else if user.Role == "2" {
 		var storageInput = StorageInput{}
-		message := c.Query("message")
-		fmt.Println("message", message)
-		json.Unmarshal([]byte(message), &storageInput)
+		fmt.Println("message", obj.Message)
+		json.Unmarshal([]byte(obj.Message), &storageInput)
 		fmt.Println("storageInput", storageInput)
 
 		err = service.AddInfoStorage(code, user.Id, storageInput.BatchID, storageInput.Driver)
@@ -210,11 +225,33 @@ func SetMessage(c *gin.Context) {
 			"success": true,
 			"message": "成功添加产品信息",
 		})
-	} else {
+	} else if user.Role == "3" {
+		var sellerInput = SellerInput{}
+		fmt.Println("message", obj.Message)
+		json.Unmarshal([]byte(obj.Message), &sellerInput)
+		fmt.Println("sellerInput", sellerInput)
+
+		err = service.AddInfoSeller(code, user.Id, sellerInput.BatchID, int(sellerInput.Price), sellerInput.Date)
+		if err != nil {
+			log.Printf("[AddInfoSeller] failed err=%+v", err)
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"message": "成功添加产品信息",
-			"code":    code,
 		})
 	}
+}
+
+func getRequestBody(context *gin.Context, s interface{}) error { //获取request的body
+	body, _ := context.Get("json") //转换成json格式
+	reqBody, _ := body.(string)
+	decoder := json.NewDecoder(bytes.NewReader([]byte(reqBody)))
+	decoder.UseNumber()       //作为数字而不是float64
+	err := decoder.Decode(&s) //从body中获取的参数存入s中
+	return err
 }

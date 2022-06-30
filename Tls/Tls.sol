@@ -29,7 +29,7 @@ contract Tls{
     //通用函数
     //初始化四个id
     function init() public returns (int){
-        int cnt=3000;
+        int cnt=0;
         Table table=tableFactory.openTable("t_ids");
         Entry entry=table.newEntry();
         entry.set("F","F");

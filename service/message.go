@@ -26,18 +26,23 @@ func GetInfoRanch(ranchId int64) ([]MessageData, error) {
 		return []MessageData{}, errors.New("合约获取牧场已发布的数据失败")
 	}
 	fmt.Println("牧场id", ranchId)
-	batchUser, err1 := dal.GetUserInfo(int64(ranchId))
+	batchUser, err1 := dal.GetUserInfo(ranchId)
 	fmt.Println("牧场信息", batchUser)
 	if err1 != nil {
 		return []MessageData{}, errors.New("获取牧场信息失败")
 	}
 
-	arrayLength := len(idAList)
+	arrayLength := len(idAList) + 1
 	dataArray := make([]MessageData, arrayLength)
 
-	for i := 0; i < arrayLength; i++ {
+	dataArray[0].Ranch = nil
+	dataArray[0].Factory = nil
+	dataArray[0].Storage = nil
+	dataArray[0].Seller = nil
+
+	for i := 1; i < arrayLength; i++ {
 		//获取溯源码
-		code, err1 := dal.GetCode(idAList[i].Int64())
+		code, err1 := dal.GetCode(idAList[i-1].Int64())
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取溯源码失败")
 		}
@@ -45,9 +50,9 @@ func GetInfoRanch(ranchId int64) ([]MessageData, error) {
 
 		//获取牧场信息
 		ranch := Ranch{}
-		ranch.BatchID = batchRawList[i]
-		ranch.Date = dateRawList[i]
-		ranch.Weight = weightRawList[i].Int64()
+		ranch.BatchID = batchRawList[i-1]
+		ranch.Date = dateRawList[i-1]
+		ranch.Weight = weightRawList[i-1].Int64()
 		ranch.Company = batchUser.Company
 		ranch.Phone = batchUser.Phone
 		ranch.Address = batchUser.Address
@@ -128,7 +133,7 @@ func GetInfoFactory(factoryId int64) ([]MessageData, error) {
 	}
 
 	fmt.Println("加工厂id", factoryId)
-	factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
+	factoryUser, err1 := dal.GetUserInfo(factoryId)
 	fmt.Println("加工厂信息", factoryUser)
 	if err1 != nil {
 		return []MessageData{}, errors.New("获取加工厂信息失败")
@@ -151,7 +156,7 @@ func GetInfoFactory(factoryId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdListEmpty[i])
 		fmt.Println("牧场id", ranchId)
 		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -184,7 +189,7 @@ func GetInfoFactory(factoryId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdList[ii])
 		fmt.Println("牧场id", ranchId)
 		////！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -214,7 +219,10 @@ func GetInfoFactory(factoryId int64) ([]MessageData, error) {
 		dataArray[i].Storage = nil
 		dataArray[i].Seller = nil
 	}
-
+	//dataArray[arrayLength-1].Ranch = nil
+	//dataArray[arrayLength-1].Factory = nil
+	//dataArray[arrayLength-1].Storage = nil
+	//dataArray[arrayLength-1].Seller = nil
 	fmt.Println("加工厂返回的信息", dataArray)
 	return dataArray, nil
 }
@@ -279,7 +287,7 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 		return []MessageData{}, errors.New("获取储运商已添加的信息失败")
 	}
 	fmt.Println("储运商id", storageId)
-	storageUser, err1 := dal.GetUserInfo(int64(storageId))
+	storageUser, err1 := dal.GetUserInfo(storageId)
 	fmt.Println("储运商信息", storageUser)
 	if err1 != nil {
 		return []MessageData{}, errors.New("获取储运商信息失败")
@@ -329,7 +337,7 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdListEmpty[i])
 		fmt.Println("牧场id", ranchId)
 		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -346,8 +354,8 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 		//获取加工厂信息
 		factoryId, _ := strconv.Atoi(factoryIdListEmpty[i])
 		fmt.Println("加工厂id", factoryId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回factoryId
+		factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
 		fmt.Println("加工厂信息", factoryUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取加工厂信息失败")
@@ -383,7 +391,7 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdList[ii])
 		fmt.Println("牧场id", ranchId)
 		////！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -400,8 +408,8 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 		//获取加工厂信息
 		factoryId, _ := strconv.Atoi(factoryIdList[ii])
 		fmt.Println("加工厂id", factoryId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回factoryId
+		factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
 		fmt.Println("加工厂信息", factoryUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取加工厂信息失败")
@@ -430,6 +438,10 @@ func GetInfoStorage(storageId int64) ([]MessageData, error) {
 
 		dataArray[i].Seller = nil
 	}
+	//dataArray[arrayLength-1].Ranch = nil
+	//dataArray[arrayLength-1].Factory = nil
+	//dataArray[arrayLength-1].Storage = nil
+	//dataArray[arrayLength-1].Seller = nil
 	fmt.Println("储运商返回的信息", dataArray)
 	return dataArray, nil
 }
@@ -488,7 +500,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		return []MessageData{}, errors.New("获取销售商已添加的信息失败")
 	}
 	fmt.Println("销售商id", sellerId)
-	sellerUser, err1 := dal.GetUserInfo(int64(sellerId))
+	sellerUser, err1 := dal.GetUserInfo(sellerId)
 	fmt.Println("销售商信息", sellerUser)
 	if err1 != nil {
 		return []MessageData{}, errors.New("获取销售商信息失败")
@@ -501,7 +513,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 	}
 	//获取牧场信息列表
 	batchRawList, weightRawList, dateRawList, ranchIdList, err := dal.TlsApi.GetByIdAPasture(idAList)
-
+	fmt.Print("获取牧场信息结束")
 	//加工厂idList
 	idBList, err := dal.TlsApi.GetBySaleIdTrace2(sellerIdStr)
 	if err != nil {
@@ -520,6 +532,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 	if err != nil {
 		return []MessageData{}, errors.New("获取销售商已添加的信息中Factory3失败")
 	}
+	fmt.Print("获取加工厂信息结束")
 
 	idCList, err := dal.TlsApi.GetBySaleIdTrace3(sellerIdStr)
 	if err != nil {
@@ -529,6 +542,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 	if err != nil {
 		return []MessageData{}, errors.New("获取销售商已添加的信息中Storage失败")
 	}
+	fmt.Print("获取储运商信息结束")
 
 	arrayLength := len(idAList) + len(idAListEmpty)
 	fmt.Println("arrayLength", arrayLength)
@@ -547,7 +561,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdListEmpty[i])
 		fmt.Println("牧场id", ranchId)
 		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -564,8 +578,8 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		//获取加工厂信息
 		factoryId, _ := strconv.Atoi(factoryIdListEmpty[i])
 		fmt.Println("加工厂id", factoryId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回factoryId
+		factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
 		fmt.Println("加工厂信息", factoryUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取加工厂信息失败")
@@ -586,8 +600,8 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		//获取储运商信息
 		storageId, _ := strconv.Atoi(storageIdListEmpty[i])
 		fmt.Println("储运商id", storageId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		storageUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回storageId
+		storageUser, err1 := dal.GetUserInfo(int64(storageId))
 		fmt.Println("储运商信息", storageUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取储运商信息失败")
@@ -617,7 +631,7 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		ranchId, _ := strconv.Atoi(ranchIdList[ii])
 		fmt.Println("牧场id", ranchId)
 		////！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		ranchUser, err1 := dal.GetUserInfo(int64(1))
+		ranchUser, err1 := dal.GetUserInfo(int64(ranchId))
 		fmt.Println("牧场信息", ranchUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取牧场信息失败")
@@ -634,8 +648,8 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		//获取加工厂信息
 		factoryId, _ := strconv.Atoi(factoryIdList[ii])
 		fmt.Println("加工厂id", factoryId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		factoryUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回factoryId
+		factoryUser, err1 := dal.GetUserInfo(int64(factoryId))
 		fmt.Println("加工厂信息", factoryUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取加工厂信息失败")
@@ -656,8 +670,8 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 		//储运商信息
 		storageId, _ := strconv.Atoi(storageIdList[ii])
 		fmt.Println("储运商id", storageId)
-		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回ranchId
-		storageUser, err1 := dal.GetUserInfo(int64(1))
+		//！！！！！！！！！！！！！！！！！！！！！！！！！！1是临时值要改回storageId
+		storageUser, err1 := dal.GetUserInfo(int64(storageId))
 		fmt.Println("储运商信息", storageUser)
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取储运商信息失败")
@@ -681,6 +695,27 @@ func GetInfoSeller(sellerId int64) ([]MessageData, error) {
 
 		dataArray[i].Seller = &seller
 	}
+	//dataArray[arrayLength-1].Ranch = nil
+	//dataArray[arrayLength-1].Factory = nil
+	//dataArray[arrayLength-1].Storage = nil
+	//dataArray[arrayLength-1].Seller = nil
 	fmt.Println("销售商返回的信息", dataArray)
 	return dataArray, nil
+}
+
+// AddInfoSeller 销售商添加信息
+func AddInfoSeller(code string, sellerId int64, batchId string, price int, salesTime string) error {
+	//获取idA
+	_idA, err := dal.GetIdA(code)
+	if err != nil {
+		return errors.New("溯源码获取idA失败")
+	}
+	idA := new(big.Int).SetUint64(uint64(int(_idA)))
+	priceBigInt := new(big.Int).SetUint64(uint64(price))
+	_, _, err = dal.TlsApi.SetSales(idA, batchId, priceBigInt, salesTime, strconv.Itoa(int(sellerId)))
+	if err != nil {
+		return errors.New("销售商添加数据失败")
+	}
+
+	return nil
 }
