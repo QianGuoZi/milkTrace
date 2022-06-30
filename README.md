@@ -23,8 +23,5 @@
 ## service
 提供公共服务方法
 
-## store
-使用合约的样例
-
 ## Tls
 ym写的solidity

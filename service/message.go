@@ -32,17 +32,12 @@ func GetInfoRanch(ranchId int64) ([]MessageData, error) {
 		return []MessageData{}, errors.New("获取牧场信息失败")
 	}
 
-	arrayLength := len(idAList) + 1
+	arrayLength := len(idAList)
 	dataArray := make([]MessageData, arrayLength)
 
-	dataArray[0].Ranch = nil
-	dataArray[0].Factory = nil
-	dataArray[0].Storage = nil
-	dataArray[0].Seller = nil
-
-	for i := 1; i < arrayLength; i++ {
+	for i := 0; i < arrayLength; i++ {
 		//获取溯源码
-		code, err1 := dal.GetCode(idAList[i-1].Int64())
+		code, err1 := dal.GetCode(idAList[i].Int64())
 		if err1 != nil {
 			return []MessageData{}, errors.New("获取溯源码失败")
 		}
@@ -50,9 +45,9 @@ func GetInfoRanch(ranchId int64) ([]MessageData, error) {
 
 		//获取牧场信息
 		ranch := Ranch{}
-		ranch.BatchID = batchRawList[i-1]
-		ranch.Date = dateRawList[i-1]
-		ranch.Weight = weightRawList[i-1].Int64()
+		ranch.BatchID = batchRawList[i]
+		ranch.Date = dateRawList[i]
+		ranch.Weight = weightRawList[i].Int64()
 		ranch.Company = batchUser.Company
 		ranch.Phone = batchUser.Phone
 		ranch.Address = batchUser.Address
