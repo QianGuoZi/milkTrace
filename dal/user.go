@@ -60,16 +60,25 @@ func GetUserInfo(id int64) (User, error) {
 
 // GetUserInfoByName 获取用户信息
 func GetUserInfoByName(name string) (User, error) {
-	user := User{}
-	DB.Model(&User{}).Where("user_name = ?", name).First(&user)
+	user, err := GetUserByRedis(name)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	if user == nil {
+		DB.Model(&User{}).Where("user_name = ?", name).First(user)
+		SetUserInRedis(user)
+	}
+
 	if user.Id == 0 {
 		return User{}, errors.New("无法找到该用户")
 	}
 	//屏蔽掉密码等信息
 	user.Pwd = ""
 	user.Salt = ""
-	log.Printf("GetUserInfoByName usr=%+v", user)
-	return user, nil
+	log.Printf("GetUserInfoByName usr=%+v", *user)
+	return *user, nil
 }
 
 // UpdateUser 更改用户信息
@@ -94,6 +103,44 @@ func UpdateUser(user *User) error {
 		log.Printf("mysql update user failed err=%+v", result.Error)
 		return result.Error
 	}
+	SetUserInRedis(user)
 
+	return nil
+}
+
+func GetUserByRedis(username string) (*User, error) {
+	userKey := "user:" + username
+	company, err1 := rdb.HGet(userKey, "company").Result()
+	address, err2 := rdb.HGet(userKey, "address").Result()
+	phone, err3 := rdb.HGet(userKey, "phone").Result()
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		return nil, err1
+	}
+
+	user := &User{
+		UserName: username,
+		Company:  company,
+		Address:  address,
+		Phone:    phone,
+	}
+
+	return user, nil
+}
+
+func SetUserInRedis(user *User) error {
+	userKey := "user:" + user.UserName
+	err := rdb.HSet(userKey, "company", user.Company).Err()
+	if err != nil {
+		return err
+	}
+	err = rdb.HSet(userKey, "address", user.Address).Err()
+	if err != nil {
+		return err
+	}
+	err = rdb.HSet(userKey, "phone", user.Phone).Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }
